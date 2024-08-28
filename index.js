@@ -1,9 +1,13 @@
 const express = require('express');
 const axios = require('axios');
+const cors = require('cors');  // Agrega esto
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Habilitar CORS para todas las rutas
+app.use(cors());  // Agrega esto
 
 // Endpoint para obtener posts de Instagram
 app.get('/api/instagram-posts', async (req, res) => {
