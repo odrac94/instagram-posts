@@ -2,6 +2,9 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const passport = require('passport');
+const InstagramStrategy = require('passport-instagram').Strategy;
+const session = require('express-session');
 require('dotenv').config();
 
 const app = express();
@@ -21,27 +24,59 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Función para sanitizar errores antes de registrarlos
-const sanitizeError = (error) => {
-  const sanitized = {
-    message: error.message,
-    stack: error.stack
-  };
-  // Eliminar información sensible si es necesario
-  delete sanitized.config; // Elimina detalles de la configuración de axios
-  return sanitized;
-};
+// Configurar express-session para almacenar la sesión del usuario
+app.use(session({
+  secret: 'secret', // cambia esto por un secreto seguro
+  resave: false,
+  saveUninitialized: true,
+}));
 
+// Inicializar Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Configurar Passport para usar la estrategia de Instagram
+passport.use(new InstagramStrategy({
+  clientID: process.env.INSTAGRAM_CLIENT_ID,
+  clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
+  callbackURL: `${process.env.BASE_URL}/auth/instagram/callback`
+}, (accessToken, refreshToken, profile, done) => {
+  // Guardar el accessToken en la sesión para usarlo después
+  return done(null, { profile, accessToken });
+}));
+
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((obj, done) => {
+  done(null, obj);
+});
+
+// Ruta para iniciar la autenticación con Instagram
+app.get('/auth/instagram', passport.authenticate('instagram'));
+
+// Ruta de callback de OAuth
+app.get('/auth/instagram/callback',
+  passport.authenticate('instagram', { failureRedirect: '/' }),
+  (req, res) => {
+    // Autenticación exitosa, redirigir al cliente
+    res.redirect('/');
+  }
+);
+
+// Ruta para obtener los posts de Instagram autenticados
 app.get('/api/instagram-posts', async (req, res) => {
   try {
-    const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
-    if (!accessToken) {
-      throw new Error('Instagram access token is not configured');
+    if (!req.user || !req.user.accessToken) {
+      return res.status(401).json({ error: 'Not authenticated with Instagram' });
     }
+
+    const accessToken = req.user.accessToken;
     const response = await axios.get(`https://graph.instagram.com/me/media?fields=id,caption,media_url,permalink,timestamp&access_token=${accessToken}`);
     res.json(response.data);
   } catch (error) {
-    console.error('Error fetching Instagram posts:', sanitizeError(error));
+    console.error('Error fetching Instagram posts:', error);
     res.status(500).json({ error: 'Error fetching Instagram posts' });
   }
 });
