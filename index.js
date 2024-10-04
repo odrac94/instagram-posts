@@ -21,6 +21,12 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// Middleware para configurar Content Security Policy (CSP)
+app.use((req, res, next) => {
+  res.setHeader("Content-Security-Policy", "default-src 'self' https://static.cloudflareinsights.com");
+  next();
+});
+
 // Función para sanitizar errores antes de registrarlos
 const sanitizeError = (error) => {
   const sanitized = {
