@@ -21,16 +21,6 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Middleware para configurar Content Security Policy (CSP)
-app.use((req, res, next) => {
-  res.setHeader(
-    "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; img-src 'self' data:; style-src 'self' 'unsafe-inline';"
-  );
-  next();
-});
-
-
 // Función para sanitizar errores antes de registrarlos
 const sanitizeError = (error) => {
   const sanitized = {
@@ -42,6 +32,7 @@ const sanitizeError = (error) => {
   return sanitized;
 };
 
+// Endpoint para obtener posts de Instagram
 app.get('/api/instagram-posts', async (req, res) => {
   try {
     const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
@@ -61,6 +52,12 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK' });
 });
 
+// Ruta de prueba
+app.get('/', (req, res) => {
+  res.send('Instagram Posts API');
+});
+
+// Inicializar el servidor
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
