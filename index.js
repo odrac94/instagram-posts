@@ -7,13 +7,13 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Confiar en los proxies (importante para X-Forwarded-For)
-app.set('trust proxy', true);
+// Configurar para que confíe en el proxy
+app.set('trust proxy', 1);
 
 // Configurar CORS para permitir solo orígenes específicos
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = ['http://localhost:3000', 'https://608da5-05.myshopify.com'];
+    const allowedOrigins = ['http://localhost:3000', 'https://608da5-05.myshopify.com', 'https://montagenailsupplies.com'];
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -38,8 +38,7 @@ const sanitizeError = (error) => {
     message: error.message,
     stack: error.stack
   };
-  // Eliminar información sensible si es necesario
-  delete sanitized.config; // Elimina detalles de la configuración de axios
+  delete sanitized.config;
   return sanitized;
 };
 
