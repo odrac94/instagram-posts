@@ -7,6 +7,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Confiar en los proxies (importante para X-Forwarded-For)
+app.set('trust proxy', true);
+
 // Configurar CORS para permitir solo orígenes específicos
 const corsOptions = {
   origin: function (origin, callback) {
