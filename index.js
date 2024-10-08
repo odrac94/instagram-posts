@@ -13,7 +13,13 @@ app.set('trust proxy', 1);
 // Configurar CORS para permitir solo orígenes específicos
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = ['http://localhost:3000', 'https://608da5-05.myshopify.com', 'https://montagenailsupplies.com'];
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://608da5-05.myshopify.com',
+      'https://montagenailsupplies.com'
+      // Puedes agregar otros orígenes aquí si es necesario
+    ];
+    console.log('Origin:', origin); // Para depuración
     if (origin && allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -23,7 +29,8 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-app.use(cors(corsOptions));
+// Remover la aplicación global de CORS
+// app.use(cors(corsOptions));
 
 // Configurar rate limiting
 const limiter = rateLimit({
@@ -41,7 +48,7 @@ const sanitizeError = (error) => {
 };
 
 // Endpoint para obtener posts de Instagram
-app.get('/api/instagram-posts', async (req, res) => {
+app.get('/api/instagram-posts', cors(corsOptions), async (req, res) => {
   try {
     const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
     if (!accessToken) {
