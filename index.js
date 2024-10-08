@@ -14,7 +14,7 @@ app.set('trust proxy', 1);
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = ['http://localhost:3000', 'https://608da5-05.myshopify.com', 'https://montagenailsupplies.com'];
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    if (origin && allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -34,12 +34,10 @@ app.use(limiter);
 
 // Función para sanitizar errores antes de registrarlos
 const sanitizeError = (error) => {
-  const sanitized = {
+  return {
     message: error.message,
     stack: error.stack
   };
-  delete sanitized.config;
-  return sanitized;
 };
 
 // Endpoint para obtener posts de Instagram
@@ -49,7 +47,12 @@ app.get('/api/instagram-posts', async (req, res) => {
     if (!accessToken) {
       throw new Error('Instagram access token is not configured');
     }
-    const response = await axios.get(`https://graph.instagram.com/me/media?fields=id,caption,media_url,permalink,timestamp&access_token=${accessToken}`);
+    const response = await axios.get('https://graph.instagram.com/me/media', {
+      params: {
+        fields: 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp',
+        access_token: accessToken
+      }
+    });
     res.json(response.data);
   } catch (error) {
     console.error('Error fetching Instagram posts:', sanitizeError(error));
